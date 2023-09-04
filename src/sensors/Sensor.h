@@ -24,7 +24,7 @@ public:
       }
       return 0;
     }
-    return _value; 
+    return _value;
   }
 
   void setFactor(float factor)
@@ -56,8 +56,8 @@ public:
   }
 
 private:
-  float _factor;
   float _value;
+  float _factor;
   SensorPayload _format;
 };
 

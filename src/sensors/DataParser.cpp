@@ -52,6 +52,7 @@ void DataParser::parseBSECLegacy(SensorLongDataPacket& data, DataBSEC& vector) {
   vector.accuracy = data.getUint8(28);
 }
 
+
 void DataParser::parseData(SensorDataPacket& data, float& value, float scaleFactor, SensorPayload format) {
   uint8_t id = data.sensorId;
   switch (format) {
@@ -84,6 +85,6 @@ void DataParser::parseData(SensorDataPacket& data, float& value, float scaleFact
 
 }
 
-void DataParser::parseActivity(SensorDataPacket& data, uint16_t value) {
+void DataParser::parseActivity(SensorDataPacket& data, uint16_t& value) {
   value = data.getUint16(0);
 }

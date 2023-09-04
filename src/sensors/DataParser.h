@@ -23,8 +23,8 @@ struct DataOrientation {
   float roll;
 
   String toString() {
-    return (String)("Orientation values - heading: " + String(heading, 3) 
-                    + "   pitch: " + String(pitch, 3) 
+    return (String)("Orientation values - heading: " + String(heading, 3)
+                    + "   pitch: " + String(pitch, 3)
                     + "   roll: " + String(roll, 3) + "\n");
   }
 };
@@ -39,9 +39,9 @@ struct DataQuaternion {
   String toString() {
     return (String)("Quaternion values - X: " + String(x, 3)
                     + "   Y: " + String(y, 3)
-                    + "   Z: " + String(z, 3) 
-                    + "   W: " + String(w, 3) 
-                    + "   Accuracy: " + String(accuracy, 3) 
+                    + "   Z: " + String(z, 3)
+                    + "   W: " + String(w, 3)
+                    + "   Accuracy: " + String(accuracy, 3)
                     + "\n");
   }
 };
@@ -69,6 +69,7 @@ struct DataBSEC {
   }
 };
 
+
 class DataParser {
 public:
   static void parse3DVector(SensorDataPacket& data, DataXYZ& vector);
@@ -78,7 +79,7 @@ public:
   static void parseBSEC(SensorLongDataPacket& data, DataBSEC& vector);
   static void parseBSECLegacy(SensorLongDataPacket& data, DataBSEC& vector);
   static void parseData(SensorDataPacket& data, float& value, float scaleFactor, SensorPayload format);
-  static void parseActivity(SensorDataPacket& data, uint16_t value);
+  static void parseActivity(SensorDataPacket& data, uint16_t& value);
 };
 
 #endif

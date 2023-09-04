@@ -27,7 +27,11 @@ public:
   float comp_h() {return _data.comp_h;}
   uint32_t comp_g() {return _data.comp_g;}
 
-  void setData(SensorDataPacket &data) {}
+
+  void setData(SensorDataPacket &data)
+  {
+    
+  }
 
   void setData(SensorLongDataPacket &data)
   {

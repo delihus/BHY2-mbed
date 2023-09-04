@@ -1,16 +1,15 @@
 #include "EslovHandler.h"
 
-#define ESLOV_DELAY (10)
+#include "DFUManager.h"
+#include "BoschSensortec.h"
 
 EslovHandler::EslovHandler() :
   _rxIndex(0),
   _rxBuffer(),
-  _eslovState(ESLOV_AVAILABLE_SENSOR_STATE),
-  _intPinAsserted(false),
-  _intPinCleared(false),
-  _dfuLedOn(false),
+  _state(ESLOV_AVAILABLE_SENSOR_STATE),
   _debug(NULL),
-  _eslovIntPin(ESLOV_INT_PIN)
+  _lastDfuPack(false),
+  _eslovIntPin(PIN_ESLOV_INT)
 {
 }
 
@@ -18,255 +17,105 @@ EslovHandler::~EslovHandler()
 {
 }
 
-bool EslovHandler::begin(bool passthrough)
+bool EslovHandler::begin()
 {
-  pinMode(_eslovIntPin, INPUT);
-  Wire.begin();
-  Wire.setClock(400000);
-  if (passthrough) {
-    Serial.begin(115200);
-  }
-
+  eslovBusy();
+  Wire.begin(ESLOV_DEFAULT_ADDRESS);
+  eslovActive = true;
+  Wire.onReceive(EslovHandler::onReceive); 
+  Wire.onRequest(EslovHandler::onRequest);
+  eslovAvailable();
   return true;
 }
 
-void EslovHandler::update() 
+void EslovHandler::onReceive(int length)
 {
-  while (Serial.available()) {
-    _rxBuffer[_rxIndex++] = Serial.read();
+  eslovHandler.receiveEvent(length);
+}
 
-    if (_rxBuffer[0] == HOST_DFU_EXTERNAL_OPCODE || _rxBuffer[0] == HOST_DFU_INTERNAL_OPCODE) {
-      if (_rxIndex == sizeof(DFUPacket) + 1) {
+void EslovHandler::onRequest()
+{
+  eslovHandler.requestEvent();
+}
 
-        if (!_dfuLedOn) {
-          pinMode(LED_BUILTIN, OUTPUT);
-          digitalWrite(LED_BUILTIN, HIGH);
-          flushWire();
-        }
+void EslovHandler::eslovBusy()
+{
+  //Set Eslov INT pin
+  digitalWrite(_eslovIntPin, LOW);
+}
 
-        //Wait for Nicla to set _eslovIntPin HIGH, meaning that is ready to receive
-        while(!digitalRead(_eslovIntPin)) {
-          if (_debug) _debug->println("Waiting for Eslov Int pin to be released");
-        }
+void EslovHandler::eslovAvailable()
+{
+  //Release Eslov INT pin
+  digitalWrite(_eslovIntPin, HIGH);
+}
 
-        writeDfuPacket(_rxBuffer, sizeof(DFUPacket) + 1);
+void EslovHandler::requestEvent()
+{
+  eslovBusy();
 
-        if (digitalRead(_eslovIntPin)) {
-          if (_debug) _debug->println("Eslov INT pin HIGH.");
-        } else {
-          if (_debug) _debug->println("Eslov INT pin STILL LOW");
-          while(!digitalRead(_eslovIntPin)) {}
-        }
+  if (_debug) {
+    _debug->print("Wire Request event. State: ");
+    if (_state == ESLOV_AVAILABLE_SENSOR_STATE) {
+      _debug->println("ESLOV_AVAILABLE_SENSOR_STATE");
+    }
+    else if (_state == ESLOV_READ_SENSOR_STATE) {
+      _debug->println("ESLOV_READ_SENSOR_STATE");
+    }
+    else if (_state == ESLOV_SENSOR_ACK_STATE) {
+      _debug->println("ESLOV_SENSOR_ACK_STATE");
+    }
+    else {
+      _debug->println(_state);
+    }
+  }
 
-        uint16_t index = _rxBuffer[2];
+  if (_state == ESLOV_AVAILABLE_SENSOR_STATE) {
+    uint8_t availableData = sensortec.availableSensorData();
+    Wire.write(availableData);
 
-        uint8_t ack = 15;
-        if (_debug) {
-          // print ack received
-          _debug->print("Packet received from Nicla. Index: ");
-          _debug->println(index);
-        }
+  } else if (_state == ESLOV_AVAILABLE_LONG_SENSOR_STATE) {
+    uint8_t availableData = sensortec.availableLongSensorData();
+    Wire.write(availableData);
 
-        dump();
+  } else if (_state == ESLOV_READ_SENSOR_STATE) {
+    SensorDataPacket data;
+    sensortec.readSensorData(data);
 
-        _rxIndex = 0;
-
-        delay(ESLOV_DELAY);
-      
-        Serial.write(ack);
-      }
-
-    } else if (_rxBuffer[0] == HOST_READ_SENSOR_OPCODE) {
-
-      if (_debug) {
-        _debug->print("received read sensor opcode\r\n");
-      }
-      uint8_t availableData = requestAvailableData();
-      Serial.write(availableData);
-
-      SensorDataPacket sensorData;
-      while (availableData) {
-        //delay(ESLOV_DELAY);
-        requestSensorData(sensorData);
-        delay(ESLOV_DELAY);
-        Serial.write((uint8_t*)&sensorData, sizeof(SensorDataPacket));
-        availableData--;
-      }
-
-      _rxIndex = 0;
-
-    } else if (_rxBuffer[0] == HOST_READ_LONG_SENSOR_OPCODE) {
-
-      if (_debug) {
-        _debug->print("received read sensor opcode\r\n");
-      }
-      uint8_t availableData = requestAvailableLongData();
-      Serial.write(availableData);
-
-      SensorLongDataPacket sensorData;
-      while (availableData) {
-        //delay(ESLOV_DELAY);
-        requestSensorLongData(sensorData);
-        delay(ESLOV_DELAY);
-        Serial.write((uint8_t*)&sensorData, sizeof(SensorLongDataPacket));
-        availableData--;
-      }
-
-      _rxIndex = 0;
-
-    } else if (_rxBuffer[0] == HOST_CONFIG_SENSOR_OPCODE) {
-      if (_rxIndex == sizeof(SensorConfigurationPacket) + 1) {
-
-        SensorConfigurationPacket* config = (SensorConfigurationPacket*)&_rxBuffer[1];
-        if (_debug) {
-          _debug->print("received config: ");
-          _debug->println(config->sensorId);
-          _debug->println(config->sampleRate);
-          _debug->println(config->latency);
-          _debug->println();
-        }
-        writeConfigPacket(*config);
-
-        uint8_t ack = requestPacketAck();
-
-        if (_debug) {
-          // print ack received
-          _debug->print("Sent Ack: ");
-          _debug->println(ack);
-        }
-
-        Serial.write(ack);
-
-        _rxIndex = 0;
-      }
-      
-    } else {
+    Wire.write((uint8_t*)&data, sizeof(SensorDataPacket));
     if (_debug) {
-      _debug->println("no opcode");
+      _debug->print("data: ");
+      _debug->println(data.sensorId);
+      _debug->println(data.size);
     }
-      _rxIndex = 0;
+
+  } else if (_state == ESLOV_READ_LONG_SENSOR_STATE) {
+    SensorLongDataPacket data;
+    sensortec.readLongSensorData(data);
+
+    Wire.write((uint8_t*)&data, sizeof(SensorLongDataPacket));
+    if (_debug) {
+      _debug->print("data: ");
+      _debug->println(data.sensorId);
+      _debug->println(data.size);
     }
-  }
-  
-}
 
-void EslovHandler::writeDfuPacket(uint8_t *data, uint8_t length)
-{
-  uint8_t attempts = 0;
-  uint8_t bytesToWrite = length;
-  while(bytesToWrite && (attempts < 3)) {
-    Wire.beginTransmission(ESLOV_DEFAULT_ADDRESS);
-    int ret = Wire.write(data, length);
-    if (_debug){
-      _debug->print("Write returned: ");
-      _debug->print(ret);
-      _debug->println();
+  } else if (_state == ESLOV_SENSOR_ACK_STATE) {
+    uint8_t ack = sensortec.acknowledgment();
+    if (_debug) {
+      _debug->print("Ack: ");
+      _debug->println(ack);
     }
-    /*
-    endTransmission returns 0 if the number of bytes written
-    *  is equal to the total length. Otherwise, a positive number is returned
-    */
-    bytesToWrite = Wire.endTransmission(true);
-    attempts++;
+    Wire.write(ack);
   }
-  if (*(data+1)) {
-    //Last packet
-    pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, LOW);
-    _dfuLedOn = false;
-    _intPinAsserted = false;
-  }
+
+  eslovAvailable();
 }
 
-void EslovHandler::writeStateChange(EslovState state)
+void EslovHandler::end()
 {
-  delay(ESLOV_DELAY);
-  while(!digitalRead(_eslovIntPin)) {}
-  uint8_t packet[2] = {ESLOV_SENSOR_STATE_OPCODE, state};
-  Wire.beginTransmission(ESLOV_DEFAULT_ADDRESS);
-  Wire.write((uint8_t*)packet, sizeof(packet));
-  Wire.endTransmission();
-  delay(ESLOV_DELAY);
-  _eslovState = state;
-}
-
-void EslovHandler::writeConfigPacket(SensorConfigurationPacket& config)
-{
-  delay(ESLOV_DELAY);
-  uint8_t packet[sizeof(SensorConfigurationPacket) + 1]; 
-  packet[0] = ESLOV_SENSOR_CONFIG_OPCODE;
-  memcpy(&packet[1], &config, sizeof(SensorConfigurationPacket));
-  Wire.beginTransmission(ESLOV_DEFAULT_ADDRESS);
-  Wire.write(packet, sizeof(SensorConfigurationPacket) + 1);
-  Wire.endTransmission();
-  delay(ESLOV_DELAY);
-}
-
-uint8_t EslovHandler::requestPacketAck()
-{ 
-  delay(ESLOV_DELAY);
-  uint8_t ret = 0;
-  while(!ret) {
-    ret = Wire.requestFrom(ESLOV_DEFAULT_ADDRESS, 1);
-    if (_debug){
-      _debug->print("Request returned: ");
-      _debug->println(ret);
-    }
-  }
-  return Wire.read();
-}
-
-uint8_t EslovHandler::requestAvailableData() 
-{
-  writeStateChange(ESLOV_AVAILABLE_SENSOR_STATE);
-  while(!digitalRead(_eslovIntPin)) {}
-  uint8_t ret = Wire.requestFrom(ESLOV_DEFAULT_ADDRESS, 1);
-  if (!ret) return 0;
-  return Wire.read();
-  delay(ESLOV_DELAY);
-}
-
-uint8_t EslovHandler::requestAvailableLongData() 
-{
-  writeStateChange(ESLOV_AVAILABLE_LONG_SENSOR_STATE);
-  while(!digitalRead(_eslovIntPin)) {}
-  uint8_t ret = Wire.requestFrom(ESLOV_DEFAULT_ADDRESS, 1);
-  if (!ret) return 0;
-  return Wire.read();
-  delay(ESLOV_DELAY);
-}
-
-bool EslovHandler::requestSensorData(SensorDataPacket &sData)
-{
-  if (_eslovState != ESLOV_READ_SENSOR_STATE) {
-    writeStateChange(ESLOV_READ_SENSOR_STATE);
-    while(!digitalRead(_eslovIntPin)) {}
-  }
-  //uint8_t ret = Wire.requestFrom(ESLOV_DEFAULT_ADDRESS, sizeof(SensorDataPacket));
-  uint8_t ret = Wire.requestFrom(ESLOV_DEFAULT_ADDRESS, sizeof(SensorDataPacket));
-  if (!ret) return false;
-
-  uint8_t *data = (uint8_t*)&sData;
-  for (uint8_t i = 0; i < sizeof(SensorDataPacket); i++) {
-    data[i] = Wire.read();
-  }
-  return true;
-}
-
-bool EslovHandler::requestSensorLongData(SensorLongDataPacket &sData)
-{
-  if (_eslovState != ESLOV_READ_LONG_SENSOR_STATE) {
-    writeStateChange(ESLOV_READ_LONG_SENSOR_STATE);
-    while(!digitalRead(_eslovIntPin)) {}
-  }
-  uint8_t ret = Wire.requestFrom(ESLOV_DEFAULT_ADDRESS, sizeof(SensorLongDataPacket));
-  if (!ret) return false;
-
-  uint8_t *data = (uint8_t*)&sData;
-  for (uint8_t i = 0; i < sizeof(SensorLongDataPacket); i++) {
-    data[i] = Wire.read();
-  }
-  return true;
+  eslovActive = false;
+  Wire.end();
 }
 
 void EslovHandler::niclaAsShield()
@@ -274,11 +123,107 @@ void EslovHandler::niclaAsShield()
   _eslovIntPin = I2C_INT_PIN;
 }
 
-void EslovHandler::flushWire()
+void EslovHandler::receiveEvent(int length)
 {
-  Wire.end();
-  Wire.begin();
-  Wire.setClock(400000);
+  if (_debug) {
+    _debug->println("Wire Receive event.");
+  }
+
+  while(Wire.available())
+  {
+    eslovBusy();
+    _rxBuffer[_rxIndex++] = Wire.read(); 
+
+    // Check if packet is complete depending on its opcode
+    if (_rxBuffer[0] == ESLOV_DFU_EXTERNAL_OPCODE) {
+      if (_rxIndex == sizeof(DFUPacket) + 1) {
+        if (_debug) {
+          _debug->print("Opcode: ");
+          _debug->println("ESLOV_DFU_EXTERNAL_OPCODE");
+        }
+        dfuManager.processPacket(eslovDFU, DFU_EXTERNAL, &_rxBuffer[1]);
+
+        dump();
+
+        _rxIndex = 0;
+
+        //Last packet
+        if (_rxBuffer[1]) {
+          dfuManager.closeDfu();
+        }
+
+        eslovAvailable();
+      }
+
+    } else if (_rxBuffer[0] == ESLOV_DFU_INTERNAL_OPCODE) {
+      if (_rxIndex == sizeof(DFUPacket) + 1) {
+        if (_debug) {
+          _debug->print("Opcode: ");
+          _debug->println("ESLOV_DFU_INTERNAL_OPCODE");
+        }
+        dfuManager.processPacket(eslovDFU, DFU_INTERNAL, &_rxBuffer[1]);
+
+        dump();
+
+        _rxIndex = 0;
+
+        //Last packet
+        if (_rxBuffer[1]) {
+          dfuManager.closeDfu();
+        }
+
+        eslovAvailable();
+      }
+
+    } else if (_rxBuffer[0] == ESLOV_SENSOR_CONFIG_OPCODE) {
+      if (_rxIndex == sizeof(SensorConfigurationPacket) + 1) {
+        if (_debug) {
+          _debug->print("Opcode: ");
+          _debug->println("ESLOV_SENSOR_CONFIG_OPCODE");
+        }
+        SensorConfigurationPacket *config = (SensorConfigurationPacket*)&_rxBuffer[1];
+        sensortec.configureSensor(*config);
+
+        _state = ESLOV_SENSOR_ACK_STATE;
+
+        dump();
+        _rxIndex = 0;
+
+        eslovAvailable();
+      }
+
+    } else if (_rxBuffer[0] == ESLOV_SENSOR_STATE_OPCODE) {
+      if (_rxIndex == 2) {
+        _state = (EslovState)_rxBuffer[1];
+        if (_debug) {
+          _debug->print("Opcode: ");
+          _debug->println("ESLOV_SENSOR_STATE_OPCODE");
+        }
+
+        dump();
+        _rxIndex = 0;
+      }
+
+      eslovAvailable();
+
+    } else {
+      // Not valid opcode. Discarding packet
+      if (_debug) {
+        _debug->println("discard");
+      }
+
+      _rxIndex = 0;
+    }
+
+    if (_rxIndex == ESLOV_MAX_LENGTH) {
+      if (_debug) {
+        _debug->println("discard");
+      }
+      // Packet too long. Discarding it
+
+      _rxIndex = 0;
+    }
+  }
 }
 
 void EslovHandler::debug(Stream &stream)
@@ -289,8 +234,10 @@ void EslovHandler::debug(Stream &stream)
 void EslovHandler::dump() 
 {
   if (_debug) {
-    _debug->print("received: ");
+    _debug->print("received:   ");
+    _debug->print("size: ");
     _debug->println(_rxIndex);
+    _debug->print("   packet: ");
     for (int i = 0; i < _rxIndex; i++) {
       _debug->print(_rxBuffer[i], HEX);
       _debug->print(", ");
