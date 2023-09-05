@@ -44,18 +44,22 @@
 
 #include "bosch/bhy2.h"
 
-const char *get_coines_error(int16_t rslt);
 const char *get_api_error(int8_t error_code);
 const char *get_sensor_error_text(uint8_t sensor_error);
 const char *get_sensor_name(uint8_t sensor_id);
 
 void setup_interfaces(bool reset_power, enum bhy2_intf intf);
-void close_interfaces(void);
+void close_interfaces(bhy2_intf intf);
+
+int mbed_i2c_read(uint8_t slave_addr, uint8_t reg_addr, uint32_t length, const uint8_t* data);
+int mbed_i2c_write(uint8_t slave_addr, uint8_t reg_addr, uint32_t length, const uint8_t* data);
+
 int8_t bhy2_spi_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
 int8_t bhy2_spi_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr);
 int8_t bhy2_i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
 int8_t bhy2_i2c_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr);
 void bhy2_delay_us(uint32_t us, void *private_data);
 bool get_interrupt_status(void);
+void print_api_error(int8_t rslt, struct bhy2_dev* dev);
 
 #endif /* _COMMON_H_ */

@@ -2,6 +2,9 @@
 #define SENSOR_ACTIVITY_H_
 
 #include "SensorClass.h"
+#include <cstring>
+
+typedef std::string String;
 
 struct ActivityBitMask{
   uint8_t bit;
@@ -10,12 +13,12 @@ struct ActivityBitMask{
 
 class SensorActivity : public SensorClass {
 public:
-  SensorActivity() {} 
+  SensorActivity() {}
   SensorActivity(uint8_t id) : SensorClass(id), _value(0) {}
 
-  uint16_t value() 
-  { 
-    return _value; 
+  uint16_t value()
+  {
+    return _value;
   }
 
   void setData(SensorDataPacket &data)

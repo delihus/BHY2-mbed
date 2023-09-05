@@ -6,7 +6,7 @@ Stream* BoschParser::_debug = NULL;
 
 void BoschParser::debug(Stream &stream)
 {
-  _debug = &stream;
+ //_debug = &stream;
 }
 
 void BoschParser::convertTime(uint64_t time_ticks, uint32_t *s, uint32_t *ns)
@@ -41,19 +41,19 @@ void BoschParser::parseData(const struct bhy2_fifo_parse_data_info *fifoData, vo
       sensortec.addLongSensorData(sensorDataLong);
   }
 
-  if (_debug) {
-    _debug->print("Sensor: ");
-    _debug->print(fifoData->sensor_id);
-    _debug->print(" size: ");
-    _debug->print(fifoData->data_size);
-    _debug->print("  value: ");
-    for (uint8_t i = 0; i < (fifoData->data_size - 1); i++)
-    {
-        _debug->print(fifoData->data_ptr[i], HEX);
-        _debug->print(" ");
-    }
-    _debug->print("  ");
-  }
+  // if (_debug) {
+   //_debug->printf("Sensor: ");
+   //_debug->printf(fifoData->sensor_id);
+   //_debug->printf(" size: ");
+   //_debug->printf(fifoData->data_size);
+   //_debug->printf("  value: ");
+    // for (uint8_t i = 0; i < (fifoData->data_size - 1); i++)
+    // {
+    //    //_debug->printf(fifoData->data_ptr[i], HEX);
+    //    //_debug->printf(" ");
+    // }
+   //_debug->printf("  ");
+  // }
 }
 
 void BoschParser::parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback_info, void *callback_ref)
@@ -82,114 +82,114 @@ void BoschParser::parseMetaEvent(const struct bhy2_fifo_parse_data_info *callbac
   struct parse_ref *parse_table = (struct parse_ref*)callback_ref;
   (void)parse_table;
 
-  if (_debug) {
+  // if (_debug) {
 
-    switch (meta_event_type)
-    {
-      case BHY2_META_EVENT_FLUSH_COMPLETE:
-        //printf("%s; T: %u.%09u; Flush complete for sensor id %u\r\n", event_text, s, ns, byte1);
-        _debug->print(event_text);
-        _debug->print(" Flush complete for sensor id ");
-        _debug->println(byte1);
-        break;
-      case BHY2_META_EVENT_SAMPLE_RATE_CHANGED:
-        //printf("%s; T: %u.%09u; Sample rate changed for sensor id %u\r\n", event_text, s, ns, byte1);
-        _debug->print(event_text);
-        _debug->print(" Sample rate changed for sensor id ");
-        _debug->println(byte1);
-        break;
-      case BHY2_META_EVENT_POWER_MODE_CHANGED:
-        //printf("%s; T: %u.%09u; Power mode changed for sensor id %u\r\n", event_text, s, ns, byte1);
-        _debug->print(event_text);
-        _debug->print(" Power mode changed for sensor id ");
-        _debug->println(byte1);
-        break;
-      case BHY2_META_EVENT_ALGORITHM_EVENTS:
-        //printf("%s; T: %u.%09u; Algorithm event\r\n", event_text, s, ns);
-        _debug->print(event_text);
-        _debug->println(" Algorithm event");
-        break;
-      case BHY2_META_EVENT_SENSOR_STATUS:
-        //printf("%s; T: %u.%09u; Accuracy for sensor id %u changed to %u\r\n", event_text, s, ns, byte1, byte2);
-        _debug->print(event_text);
-        _debug->print(" Accuracy for sensor id ");
-        _debug->print(byte1);
-        _debug->print(" changed to ");
-        _debug->println(byte2);
-        break;
-      case BHY2_META_EVENT_BSX_DO_STEPS_MAIN:
-        //printf("%s; T: %u.%09u; BSX event (do steps main)\r\n", event_text, s, ns);
-        _debug->print(event_text);
-        _debug->println(" Algorithm event");
-        break;
-      case BHY2_META_EVENT_BSX_DO_STEPS_CALIB:
-        //printf("%s; T: %u.%09u; BSX event (do steps calib)\r\n", event_text, s, ns);
-        _debug->print(event_text);
-        _debug->println(" BSX event (do steps calib)");
-        break;
-      case BHY2_META_EVENT_BSX_GET_OUTPUT_SIGNAL:
-        //printf("%s; T: %u.%09u; BSX event (get output signal)\r\n", event_text, s, ns);
-        _debug->print(event_text);
-        _debug->println(" BSX event (get output signal)");
-        break;
-      case BHY2_META_EVENT_SENSOR_ERROR:
-        //printf("%s; T: %u.%09u; Sensor id %u reported error 0x%02X\r\n", event_text, s, ns, byte1, byte2);
-        _debug->print(event_text);
-        _debug->print(" Sensor id ");
-        _debug->print(byte1);
-        _debug->print(" reported error 0x ");
-        _debug->println(byte2, HEX);
-        break;
-      case BHY2_META_EVENT_FIFO_OVERFLOW:
-        //printf("%s; T: %u.%09u; FIFO overflow\r\n", event_text, s, ns);
-        _debug->print(event_text);
-        _debug->println(" FIFO overflow");
-        break;
-      case BHY2_META_EVENT_DYNAMIC_RANGE_CHANGED:
-        //printf("%s; T: %u.%09u; Dynamic range changed for sensor id %u\r\n", event_text, s, ns, byte1);
-        _debug->print(event_text);
-        _debug->print(" Dynamic range changed for sensor id ");
-        _debug->println(byte1);
-        break;
-      case BHY2_META_EVENT_FIFO_WATERMARK:
-        //printf("%s; T: %u.%09u; FIFO watermark reached\r\n", event_text, s, ns);
-        _debug->print(event_text);
-        _debug->println(" FIFO watermark reached");
-        break;
-      case BHY2_META_EVENT_INITIALIZED:
-        //printf("%s; T: %u.%09u; Firmware initialized. Firmware version %u\r\n", event_text, s, ns,
-              //((uint16_t )byte2 << 8) | byte1);
-        _debug->print(event_text);
-        _debug->print(" Firmware initialized. Firmware version ");
-        _debug->println(((uint16_t )byte2 << 8) | byte1);
-        break;
-      case BHY2_META_TRANSFER_CAUSE:
-        //printf("%s; T: %u.%09u; Transfer cause for sensor id %u\r\n", event_text, s, ns, byte1);
-        _debug->print(event_text);
-        _debug->print(" Transfer cause for sensor id ");
-        _debug->println(byte1);
-        break;
-      case BHY2_META_EVENT_SENSOR_FRAMEWORK:
-        //printf("%s; T: %u.%09u; Sensor framework event for sensor id %u\r\n", event_text, s, ns, byte1);
-        _debug->print(event_text);
-        _debug->print(" Sensor framework event for sensor id ");
-        _debug->println(byte1);
-        break;
-      case BHY2_META_EVENT_RESET:
-        //printf("%s; T: %u.%09u; Reset event\r\n", event_text, s, ns);
-        _debug->print(event_text);
-        _debug->println(" Reset event");
-        break;
-      case BHY2_META_EVENT_SPACER:
-        break;
-      default:
-        //printf("%s; T: %u.%09u; Unknown meta event with id: %u\r\n", event_text, s, ns, meta_event_type);
-        _debug->print(event_text);
-        _debug->print(" Unknown meta event with id: ");
-        _debug->println(meta_event_type);
-        break;
-    }
-  }
+  //   switch (meta_event_type)
+  //   {
+  //     case BHY2_META_EVENT_FLUSH_COMPLETE:
+  //       //printf("%s; T: %u.%09u; Flush complete for sensor id %u\r\n", event_text, s, ns, byte1);
+  //      //_debug->printf(event_text);
+  //      //_debug->printf(" Flush complete for sensor id ");
+  //      //_debug->printf(byte1);
+  //       break;
+  //     case BHY2_META_EVENT_SAMPLE_RATE_CHANGED:
+  //       //printf("%s; T: %u.%09u; Sample rate changed for sensor id %u\r\n", event_text, s, ns, byte1);
+  //      //_debug->printf(event_text);
+  //      //_debug->printf(" Sample rate changed for sensor id ");
+  //      //_debug->printf(byte1);
+  //       break;
+  //     case BHY2_META_EVENT_POWER_MODE_CHANGED:
+  //       //printf("%s; T: %u.%09u; Power mode changed for sensor id %u\r\n", event_text, s, ns, byte1);
+  //      //_debug->printf(event_text);
+  //      //_debug->printf(" Power mode changed for sensor id ");
+  //      //_debug->printf(byte1);
+  //       break;
+  //     case BHY2_META_EVENT_ALGORITHM_EVENTS:
+  //       //printf("%s; T: %u.%09u; Algorithm event\r\n", event_text, s, ns);
+  //      //_debug->printf(event_text);
+  //      //_debug->printf(" Algorithm event");
+  //       break;
+  //     case BHY2_META_EVENT_SENSOR_STATUS:
+  //       //printf("%s; T: %u.%09u; Accuracy for sensor id %u changed to %u\r\n", event_text, s, ns, byte1, byte2);
+  //      //_debug->printf(event_text);
+  //      //_debug->printf(" Accuracy for sensor id ");
+  //      //_debug->printf(byte1);
+  //      //_debug->printf(" changed to ");
+  //      //_debug->printf(byte2);
+  //       break;
+  //     case BHY2_META_EVENT_BSX_DO_STEPS_MAIN:
+  //       //printf("%s; T: %u.%09u; BSX event (do steps main)\r\n", event_text, s, ns);
+  //      //_debug->printf(event_text);
+  //      //_debug->printf(" Algorithm event");
+  //       break;
+  //     case BHY2_META_EVENT_BSX_DO_STEPS_CALIB:
+  //       //printf("%s; T: %u.%09u; BSX event (do steps calib)\r\n", event_text, s, ns);
+  //      //_debug->printf(event_text);
+  //      //_debug->printf(" BSX event (do steps calib)");
+  //       break;
+  //     case BHY2_META_EVENT_BSX_GET_OUTPUT_SIGNAL:
+  //       //printf("%s; T: %u.%09u; BSX event (get output signal)\r\n", event_text, s, ns);
+  //      //_debug->printf(event_text);
+  //      //_debug->printf(" BSX event (get output signal)");
+  //       break;
+  //     case BHY2_META_EVENT_SENSOR_ERROR:
+  //       //printf("%s; T: %u.%09u; Sensor id %u reported error 0x%02X\r\n", event_text, s, ns, byte1, byte2);
+  //      //_debug->printf(event_text);
+  //      //_debug->printf(" Sensor id ");
+  //      //_debug->printf(byte1);
+  //      //_debug->printf(" reported error 0x ");
+  //      //_debug->printf(byte2, HEX);
+  //       break;
+  //     case BHY2_META_EVENT_FIFO_OVERFLOW:
+  //       //printf("%s; T: %u.%09u; FIFO overflow\r\n", event_text, s, ns);
+  //      //_debug->printf(event_text);
+  //      //_debug->printf(" FIFO overflow");
+  //       break;
+  //     case BHY2_META_EVENT_DYNAMIC_RANGE_CHANGED:
+  //       //printf("%s; T: %u.%09u; Dynamic range changed for sensor id %u\r\n", event_text, s, ns, byte1);
+  //      //_debug->printf(event_text);
+  //      //_debug->printf(" Dynamic range changed for sensor id ");
+  //      //_debug->printf(byte1);
+  //       break;
+  //     case BHY2_META_EVENT_FIFO_WATERMARK:
+  //       //printf("%s; T: %u.%09u; FIFO watermark reached\r\n", event_text, s, ns);
+  //      //_debug->printf(event_text);
+  //      //_debug->printf(" FIFO watermark reached");
+  //       break;
+  //     case BHY2_META_EVENT_INITIALIZED:
+  //       //printf("%s; T: %u.%09u; Firmware initialized. Firmware version %u\r\n", event_text, s, ns,
+  //             //((uint16_t )byte2 << 8) | byte1);
+  //      //_debug->printf(event_text);
+  //      //_debug->printf(" Firmware initialized. Firmware version ");
+  //      //_debug->printf(((uint16_t )byte2 << 8) | byte1);
+  //       break;
+  //     case BHY2_META_TRANSFER_CAUSE:
+  //       //printf("%s; T: %u.%09u; Transfer cause for sensor id %u\r\n", event_text, s, ns, byte1);
+  //      //_debug->printf(event_text);
+  //      //_debug->printf(" Transfer cause for sensor id ");
+  //      //_debug->printf(byte1);
+  //       break;
+  //     case BHY2_META_EVENT_SENSOR_FRAMEWORK:
+  //       //printf("%s; T: %u.%09u; Sensor framework event for sensor id %u\r\n", event_text, s, ns, byte1);
+  //      //_debug->printf(event_text);
+  //      //_debug->printf(" Sensor framework event for sensor id ");
+  //      //_debug->printf(byte1);
+  //       break;
+  //     case BHY2_META_EVENT_RESET:
+  //       //printf("%s; T: %u.%09u; Reset event\r\n", event_text, s, ns);
+  //      //_debug->printf(event_text);
+  //      //_debug->printf(" Reset event");
+  //       break;
+  //     case BHY2_META_EVENT_SPACER:
+  //       break;
+  //     default:
+  //       //printf("%s; T: %u.%09u; Unknown meta event with id: %u\r\n", event_text, s, ns, meta_event_type);
+  //      //_debug->printf(event_text);
+  //      //_debug->printf(" Unknown meta event with id: ");
+  //      //_debug->printf(meta_event_type);
+  //       break;
+  //   }
+  // }
 }
 
 void BoschParser::parseGeneric(const struct bhy2_fifo_parse_data_info *callback_info, void *callback_ref)
@@ -209,13 +209,13 @@ void BoschParser::parseDebugMessage(const struct bhy2_fifo_parse_data_info *call
 {
   uint32_t s, ns;
   convertTime(*callback_info->time_stamp, &s, &ns);
-  //if (_debug) _debug->println("Debug message: ");
-  if (_debug) {
-    _debug->print("[DEBUG MSG]; flag: 0x");
-    _debug->print(callback_info->data_ptr[0]);
-    _debug->print(" data: ");
-    _debug->println((char*)&callback_info->data_ptr[1]);
-  }
+  //if (_debug)//_debug->printf("Debug message: ");
+  // if (_debug) {
+  //  //_debug->printf("[DEBUG MSG]; flag: 0x");
+  //  //_debug->printf(callback_info->data_ptr[0]);
+  //  //_debug->printf(" data: ");
+  //  //_debug->printf((char*)&callback_info->data_ptr[1]);
+  // }
   //printf("[DEBUG MSG]; T: %u.%09u; flag: 0x%x; data: %s\r\n",
         //s,
         //ns,

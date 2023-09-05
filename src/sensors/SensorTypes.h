@@ -8,7 +8,7 @@
 
 #define SENSOR_LONG_DATA_FIXED_LENGTH (18)
 
-typedef bhy2_virt_sensor_conf SensorConfig;
+typedef struct bhy2_virt_sensor_conf SensorConfig;
 
 struct __attribute__((packed)) SensorConfigurationPacket {
   uint8_t sensorId;

@@ -1,9 +1,11 @@
 #ifndef DATA_PARSER_H_
 #define DATA_PARSER_H_
 
-#include "Arduino.h"
+#include <string>
 #include "sensors/SensorTypes.h"
 #include "SensorID.h"
+
+typedef std::string String;
 
 struct DataXYZ {
   int16_t x;
@@ -11,9 +13,9 @@ struct DataXYZ {
   int16_t z;
 
   String toString() {
-    return (String)("XYZ values - X: " + String(x)
-                    + "   Y: " + String(y)
-                    + "   Z: " + String(z) + "\n");
+    return (String)("XYZ values - X: " + std::to_string(x)
+                    + "   Y: " + std::to_string(y)
+                    + "   Z: " + std::to_string(z) + "\n");
   }
 };
 
@@ -23,9 +25,9 @@ struct DataOrientation {
   float roll;
 
   String toString() {
-    return (String)("Orientation values - heading: " + String(heading, 3)
-                    + "   pitch: " + String(pitch, 3)
-                    + "   roll: " + String(roll, 3) + "\n");
+    return (String)("Orientation values - heading: " + std::to_string(heading)
+                    + "   pitch: " + std::to_string(pitch)
+                    + "   roll: " + std::to_string(roll) + "\n");
   }
 };
 
@@ -37,11 +39,11 @@ struct DataQuaternion {
   float accuracy;
 
   String toString() {
-    return (String)("Quaternion values - X: " + String(x, 3)
-                    + "   Y: " + String(y, 3)
-                    + "   Z: " + String(z, 3)
-                    + "   W: " + String(w, 3)
-                    + "   Accuracy: " + String(accuracy, 3)
+    return (String)("Quaternion values - X: " + std::to_string(x)
+                    + "   Y: " + std::to_string(y)
+                    + "   Z: " + std::to_string(z)
+                    + "   W: " + std::to_string(w)
+                    + "   Accuracy: " + std::to_string(accuracy)
                     + "\n");
   }
 };
@@ -57,14 +59,14 @@ struct DataBSEC {
   uint8_t   accuracy;    //accuracy level: [0-3]
 
   String toString() {
-    return (String)("BSEC output values - iaq: " + String(iaq)
-                    + "   iaq_s: " + String(iaq_s)
-                    + "   b_voc_eq: " + String(b_voc_eq, 2)
-                    + "   co2_eq: " + String(co2_eq)
-                    + "   accuracy: " + String(accuracy)
-                    + "   comp_t: " + String(comp_t, 2)
-                    + "   comp_h: " + String(comp_h, 2)
-                    + "   comp_g: " + String(comp_g)
+    return (String)("BSEC output values - iaq: " + std::to_string(iaq)
+                    + "   iaq_s: " + std::to_string(iaq_s)
+                    + "   b_voc_eq: " + std::to_string(b_voc_eq)
+                    + "   co2_eq: " + std::to_string(co2_eq)
+                    + "   accuracy: " + std::to_string(accuracy)
+                    + "   comp_t: " + std::to_string(comp_t)
+                    + "   comp_h: " + std::to_string(comp_h)
+                    + "   comp_g: " + std::to_string(comp_g)
                     + "\n");
   }
 };

@@ -3,8 +3,7 @@
 #include "sensors/SensorManager.h"
 
 BoschSensortec::BoschSensortec() :
-  _acknowledgment(SensorNack),
-  _debug(NULL)
+  _acknowledgment(SensorNack)
 {
 }
 
@@ -14,9 +13,9 @@ BoschSensortec::~BoschSensortec()
 
 bool BoschSensortec::begin()
 {
-  setup_interfaces(false, BHY2_SPI_INTERFACE);
-  auto ret = bhy2_init(BHY2_SPI_INTERFACE, bhy2_spi_read, bhy2_spi_write, bhy2_delay_us, MAX_READ_WRITE_LEN, NULL, &_bhy2);
-  if (_debug) _debug->println(get_api_error(ret));
+  setup_interfaces(false, BHY2_I2C_INTERFACE);
+  auto ret = bhy2_init(BHY2_I2C_INTERFACE, bhy2_i2c_read, bhy2_i2c_write, bhy2_delay_us, MAX_READ_WRITE_LEN, NULL, &_bhy2);
+  if (_debug) _debug->printf(get_api_error(ret));
   if (ret != BHY2_OK) return false;
 
   bhy2_soft_reset(&_bhy2);
@@ -26,34 +25,34 @@ bool BoschSensortec::begin()
   //delay(1000);
   ret = bhy2_get_boot_status(&stat, &_bhy2);
   if (_debug) {
-    _debug->println(get_api_error(ret));
-    _debug->print("Boot status: ");
-    _debug->println(stat, HEX);
+   //_debug->printf(get_api_error(ret));
+   //_debug->printf("Boot status: ");
+   //_debug->printf(stat, HEX);
   }
 
   ret = bhy2_boot_from_flash(&_bhy2);
-  if (_debug) _debug->println(get_api_error(ret));
+  if (_debug)//_debug->printf(get_api_error(ret));
   if (ret != BHY2_OK) return false;
 
   ret = bhy2_get_boot_status(&stat, &_bhy2);
   if (_debug) {
-    _debug->println(get_api_error(ret));
-    _debug->print("Boot status: ");
-    _debug->println(stat, HEX);
+   //_debug->printf(get_api_error(ret));
+   //_debug->printf("Boot status: ");
+   //_debug->printf(stat, HEX);
   }
 
   ret = bhy2_get_host_interrupt_ctrl(&stat, &_bhy2);
   if (_debug) {
-    _debug->println(get_api_error(ret));
-    _debug->print("Interrupt ctrl: ");
-    _debug->println(stat, HEX);
+   //_debug->printf(get_api_error(ret));
+   //_debug->printf("Interrupt ctrl: ");
+   //_debug->printf(stat, HEX);
   }
 
   ret = bhy2_get_host_intf_ctrl(&stat, &_bhy2);
   if (_debug) {
-    _debug->println(get_api_error(ret));
-    _debug->print("Interface ctrl: ");
-    _debug->println(stat, HEX);
+   //_debug->printf(get_api_error(ret));
+   //_debug->printf("Interface ctrl: ");
+   //_debug->printf(stat, HEX);
   }
 
   bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT, BoschParser::parseMetaEvent, NULL, &_bhy2);
@@ -61,7 +60,7 @@ bool BoschSensortec::begin()
   bhy2_register_fifo_parse_callback(BHY2_SYS_ID_DEBUG_MSG, BoschParser::parseDebugMessage, NULL, &_bhy2);
 
   ret = bhy2_get_and_process_fifo(_workBuffer, WORK_BUFFER_SIZE, &_bhy2);
-  if (_debug) _debug->println(get_api_error(ret));
+  if (_debug)//_debug->printf(get_api_error(ret));
 
   // All sensors' data are handled in the same generic way
   for (uint8_t i = 1; i < BHY2_SENSOR_ID_MAX; i++) {
@@ -88,13 +87,13 @@ void BoschSensortec::printSensors() {
   }
 
   if (_debug) {
-    _debug->println("Present sensors: ");
+   //_debug->printf("Present sensors: ");
     for (int i = 0; i < (int)sizeof(presentBuff); i++) {
       if (presentBuff[i]) {
-        _debug->print(i);
-        _debug->print(" - ");
-        _debug->print(get_sensor_name(i));
-        _debug->println();
+       //_debug->printf(i);
+       //_debug->printf(" - ");
+       //_debug->printf(get_sensor_name(i));
+       //_debug->printf();
       }
     }
   }
@@ -109,7 +108,7 @@ bool BoschSensortec::hasSensor(uint8_t sensorId) {
 void BoschSensortec::configureSensor(SensorConfigurationPacket& config)
 {
   auto ret = bhy2_set_virt_sensor_cfg(config.sensorId, config.sampleRate, config.latency, &_bhy2);
-  if (_debug) _debug->println(get_api_error(ret));
+  // if (_debug)//_debug->printf(get_api_error(ret));
   if (ret == BHY2_OK) {
     _acknowledgment = SensorAck;
   } else {
@@ -180,13 +179,13 @@ void BoschSensortec::update()
 {
   if (get_interrupt_status()) {
     auto ret = bhy2_get_and_process_fifo(_workBuffer, WORK_BUFFER_SIZE, &_bhy2);
-    if (_debug) _debug->println(get_api_error(ret));
+    // if (_debug)//_debug->printf(get_api_error(ret));
   }
 }
 
 void BoschSensortec::debug(Stream &stream)
 {
-  _debug = &stream;
+ _debug = &stream;
 }
 
 #ifdef __cplusplus

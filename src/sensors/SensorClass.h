@@ -4,6 +4,8 @@
 #include "SensorID.h"
 #include "DataParser.h"
 #include "BoschSensortec.h"
+#include <cstring>
+typedef std::string String;
 
 class SensorClass {
 public:
@@ -12,7 +14,7 @@ public:
   virtual ~SensorClass();
 
   uint8_t id();
-  /* 
+  /*
    * Sample rate: it indicates the frequency at which a sensor is sampled.
    *              It is expressed in Hz.
    * Latency: it indicates how much ms time a new value is retained in its fifo
