@@ -35,44 +35,7 @@ void BHY2::setLDOTimeout(int time) {
 
 bool BHY2::begin()
 {
-  // bool res;
-  // _niclaConfig = config;
-
-  // if (niclaConnection == NICLA_AS_SHIELD) {
-  //   _eslovIntPin = I2C_INT_PIN;
-  //   eslovHandler.niclaAsShield();
-  // }
-
-  // res = nicla::begin();
-  // _startTime = millis();
-  // nicla::enable3V3LDO();
-  // _pingTime = millis();
-  // res = sensortec.begin() & res;
-  // //even if res from a single step is false, we still want to continue,
-  // //e.g: The BHI260 device might have failed to boot because of an invalid FW updated via DFU.
-  // //in this case, we want to start BLEHandler and DFUManager
-  // //so they could come to the rescue the failed firmware for BHI260AP
-
-
-  // if (!(_niclaConfig & NICLA_STANDALONE)) {
-  //   if (_niclaConfig & NICLA_BLE) {
-  //     res = bleHandler.begin() & res;
-  //   }
-  //   if (_niclaConfig & NICLA_I2C) {
-  //     //Start Eslov Handler
-  //     pinMode(_eslovIntPin, OUTPUT);
-  //     res = eslovHandler.begin() & res;
-  //   }
-  //   //Start DFU Manager
-  //   res = dfuManager.begin() & res;
-  // }
-
-  // if (_debug) {
-  //  //_debug->printf("Eslov int pin: ");
-  //  //_debug->printf(_eslovIntPin);
-  // }
-
-  return true;
+  return sensortec.begin();
 }
 
 void BHY2::update()
@@ -160,15 +123,7 @@ void BHY2::parse(SensorDataPacket& data, DataOrientation& vector, float scaleFac
 
 void BHY2::debug(Stream &stream)
 {
-//  _debug = &stream;
-  // if (_niclaConfig & NICLA_I2C) {
-  //   eslovHandler.debug(stream);
-  // }
-  // if (_niclaConfig & NICLA_BLE) {
-  //   BLEHandler::debug(stream);
-  // }
-  // sensortec.debug(stream);
-  // dfuManager.debug(stream);
+  _debug = &stream;
   BoschParser::debug(stream);
 }
 

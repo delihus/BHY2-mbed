@@ -6,7 +6,7 @@ Stream* BoschParser::_debug = NULL;
 
 void BoschParser::debug(Stream &stream)
 {
- //_debug = &stream;
+ _debug = &stream;
 }
 
 void BoschParser::convertTime(uint64_t time_ticks, uint32_t *s, uint32_t *ns)
