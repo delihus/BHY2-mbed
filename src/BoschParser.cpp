@@ -2,9 +2,9 @@
 #include "BoschSensortec.h"
 #include "sensors/SensorID.h"
 
-Stream* BoschParser::_debug = NULL;
+mbed::Stream* BoschParser::_debug = NULL;
 
-void BoschParser::debug(Stream &stream)
+void BoschParser::debug(mbed::Stream &stream)
 {
  _debug = &stream;
 }

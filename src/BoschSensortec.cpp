@@ -8,7 +8,7 @@ BoschSensortec::BoschSensortec() : _acknowledgment(SensorNack)
 
 BoschSensortec::~BoschSensortec()
 {
-  close_interfaces(&_bhy2);
+  close_interfaces(BHY2_I2C_INTERFACE);
 }
 
 bool BoschSensortec::begin()
@@ -26,7 +26,7 @@ bool BoschSensortec::begin()
     _debug->printf(get_api_error(ret));
   // Print bhi status
   uint8_t stat = 0;
-  wait_ms(1000);
+  wait_us(1000000);
   ret = bhy2_get_boot_status(&stat, &_bhy2);
   if (_debug)
   {
@@ -204,7 +204,7 @@ void BoschSensortec::update()
   }
 }
 
-void BoschSensortec::debug(Stream& stream)
+void BoschSensortec::debug(mbed::Stream& stream)
 {
   _debug = &stream;
 }

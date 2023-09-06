@@ -121,7 +121,7 @@ void BHY2::parse(SensorDataPacket& data, DataOrientation& vector, float scaleFac
   DataParser::parseEuler(data, vector, scaleFactor);
 }
 
-void BHY2::debug(Stream &stream)
+void BHY2::debug(mbed::Stream &stream)
 {
   _debug = &stream;
   BoschParser::debug(stream);

@@ -141,8 +141,8 @@ private:
    *
    */
   friend class BHY2;
-  void debug(Stream &stream);
-  Stream *_debug;
+  void debug(mbed::Stream &stream);
+  mbed::Stream *_debug  = nullptr;
 };
 
 /**

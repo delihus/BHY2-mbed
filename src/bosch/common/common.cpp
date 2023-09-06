@@ -108,21 +108,28 @@ const char* get_api_error(int8_t error_code)
 
 void setup_interfaces(bool reset_power, enum bhy2_intf intf)
 {
+  // SPI communication not implemented
   if(intf != BHY2_I2C_INTERFACE){
     return;
   }
+
   i2c.frequency(IMU_I2C_FREQUENCY);
+
   if(reset_power){
-    DigitalOut sens_power(SENS_POWER_ON, 0);
-    sens_power = 0;
+    mbed::DigitalOut i2c_sensors_power(SENS_POWER_ON, 0);
+    i2c_sensors_power = 0;
     wait_us(100000);
-    sens_power = 1;
+    i2c_sensors_power = 1;
   }
 }
 
 void close_interfaces(bhy2_intf intf)
 {
-  UNUSED(intf);
+  if(intf != BHY2_I2C_INTERFACE){
+    return;
+  }
+
+  i2c.stop();
 }
 
 int8_t bhy2_spi_read(uint8_t reg_addr, uint8_t* reg_data, uint32_t length, void* intf_ptr)

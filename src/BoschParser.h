@@ -64,8 +64,8 @@ private:
    *
    */
   friend class BHY2;
-  static void debug(Stream &stream);
-  static Stream *_debug;
+  static void debug(mbed::Stream &stream);
+  static mbed::Stream *_debug;
 };
 
 #endif

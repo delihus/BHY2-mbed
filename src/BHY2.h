@@ -147,10 +147,10 @@ public:
    *
    * @param Stream object that implements the printf() function.
    */
-  void debug(Stream &stream);
+  void debug(mbed::Stream &stream);
 
 private:
-  Stream *_debug;
+  mbed::Stream *_debug = nullptr;
 
   void pingI2C();
   int _pingTime;
