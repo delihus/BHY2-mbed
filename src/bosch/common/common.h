@@ -44,12 +44,13 @@
 
 #include "bosch/bhy2.h"
 
+
 const char *get_api_error(int8_t error_code);
 const char *get_sensor_error_text(uint8_t sensor_error);
 const char *get_sensor_name(uint8_t sensor_id);
 void print_api_error(int8_t rslt, struct bhy2_dev* dev);
 
-void setup_interfaces(bool reset_power, enum bhy2_intf intf);
+void setup_interfaces(bool reset_power, mbed::I2C &i2c_ptr, mbed::DigitalIn& int_pin, enum bhy2_intf intf);
 void close_interfaces(bhy2_intf intf);
 bool get_interrupt_status(void);
 

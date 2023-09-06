@@ -158,10 +158,4 @@ private:
   int _startTime;
 };
 
-/**
- * @brief The BHY2 class can be externally linked to as BHY2 in your sketch
- *
- */
-extern BHY2 BHY2;
-
 #endif

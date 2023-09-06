@@ -50,18 +50,13 @@
 #define BHI260_SHUTTLE_ID 0x119
 
 #define IMU_I2C_FREQUENCY 100000
-#define IMU_I2C_SCL SENS2_PIN3
-#define IMU_I2C_SDA SENS2_PIN4
-#define IMU_I2C_INT PA_6
 
-mbed::DigitalIn bhy2_int_pin(IMU_I2C_INT);
-mbed::I2C i2c{ IMU_I2C_SDA, IMU_I2C_SCL };
-static mbed::Serial uros_serial(PB_10, PB_11);
-
+mbed::I2C *i2c;
+mbed::DigitalIn *bhy2_int_pin;
 
 bool get_interrupt_status(void)
 {
-  return bhy2_int_pin;
+  return *bhy2_int_pin;
 }
 
 const char* get_api_error(int8_t error_code)
@@ -106,14 +101,17 @@ const char* get_api_error(int8_t error_code)
   return ret;
 }
 
-void setup_interfaces(bool reset_power, enum bhy2_intf intf)
+void setup_interfaces(bool reset_power, mbed::I2C &i2c_ptr, mbed::DigitalIn& int_pin, enum bhy2_intf intf)
 {
   // SPI communication not implemented
   if(intf != BHY2_I2C_INTERFACE){
     return;
   }
 
-  i2c.frequency(IMU_I2C_FREQUENCY);
+  i2c = &i2c_ptr;
+  bhy2_int_pin = &int_pin;
+
+  i2c->frequency(IMU_I2C_FREQUENCY);
 
   if(reset_power){
     mbed::DigitalOut i2c_sensors_power(SENS_POWER_ON, 0);
@@ -129,7 +127,7 @@ void close_interfaces(bhy2_intf intf)
     return;
   }
 
-  i2c.stop();
+  i2c->stop();
 }
 
 int8_t bhy2_spi_read(uint8_t reg_addr, uint8_t* reg_data, uint32_t length, void* intf_ptr)
@@ -147,8 +145,8 @@ int8_t bhy2_spi_write(uint8_t reg_addr, const uint8_t* reg_data, uint32_t length
 int mbed_i2c_read(uint8_t slave_addr, uint8_t reg_addr, uint32_t length, const uint8_t* data)
 {
   int result = 0;
-  result += i2c.write((slave_addr << 1), (const char*)&reg_addr, 1, true);
-  result += i2c.read((slave_addr << 1), (char*)data, length, 0);
+  result += i2c->write((slave_addr << 1), (const char*)&reg_addr, 1, true);
+  result += i2c->read((slave_addr << 1), (char*)data, length, 0);
   return result;
 }
 
@@ -158,7 +156,7 @@ int mbed_i2c_write(uint8_t slave_addr, uint8_t reg_addr, uint32_t length, const 
   buffer = (char*)malloc((length+1)*sizeof(unsigned char));
   buffer[0] = reg_addr;
   memcpy(buffer + 1, data, length);
-  int result = i2c.write((slave_addr<<1), (const char*)buffer, length + 1, 0);
+  int result = i2c->write((slave_addr<<1), (const char*)buffer, length + 1, 0);
   free(buffer);
   return result;
 }

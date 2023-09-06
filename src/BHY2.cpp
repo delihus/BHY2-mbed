@@ -126,5 +126,3 @@ void BHY2::debug(mbed::Stream &stream)
   _debug = &stream;
   BoschParser::debug(stream);
 }
-
-struct BHY2 BHY2;
